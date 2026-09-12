@@ -1,126 +1,16 @@
-import { Request, Response } from "express";
-import { v4 as uuidv4 } from "uuid";
-import { BinModel } from "../models/bin.js";
-import { HttpMethod, ICapturedRequest } from "../types/webhook.js";
+import { Router } from "express";
+import {
+  createBin,
+  captureWebhook,
+  getBinRequests,
+  deleteBin,
+} from "../controllers/webhookController.js";
 
-//create unique Bin
-export const createBin = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const binId = uuidv4().slice(0, 8);
-    const newBin = await BinModel.create({
-      binId,
-      requests: [],
-    });
-    res.status(201).json({
-      success: true,
-      message: "Bin created successfuly",
-      data: {
-        binId: newBin.binId,
-        endpointUrl: `${req.protocol}://${req.get("host")}/api/bins/${newBin.binId}`,
-        createdAt: newBin.createdAt,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to create Bin",
-      error,
-    });
-  }
-};
+const router = Router();
 
-// catch bin
-export const captureWebhook = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    const { bindId } = req.params;
-    const bin = await BinModel.findOne({ bindId });
-    if (!bin) {
-      res.status(404).json({
-        success: false,
-        message: "Bin not found",
-      });
-    }
+router.post("/", createBin);
+router.get("/:binId", getBinRequests);
+router.delete("/:binId", deleteBin);
+router.all("/:binId/collect", captureWebhook);
 
-    const capturedReq: ICapturedRequest = {
-      requestId: uuidv4(),
-      method: req.method as HttpMethod,
-      headers: req.headers,
-      body: req.body || {},
-      queryParams: req.query || {},
-      ip: req.ip || req.socket.remoteAddress || "Unknown",
-      timestamp: new Date(),
-    };
-
-    bin?.requests.unshift(capturedReq);
-    await bin?.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Webhook captured successfully",
-      requestId: capturedReq.requestId,
-    });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to capture webhook", error });
-  }
-};
-
-//get all requests for each Bind
-export const getBinRequests = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    const { bindId } = req.params;
-    const bin = await BinModel.findOne({ bindId });
-
-    if (!bin) {
-      res.status(404).json({ success: false, message: "Bin not found" });
-      return;
-    }
-
-    res.status(200).json({
-      success: true,
-      data: {
-        binId: bin.binId,
-        totalRequests: bin.requests.length,
-        requests: bin.requests,
-      },
-    });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to capture webhook", error });
-  }
-};
-
-//delete bin
-export const deleteBin = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { binId } = req.params;
-
-    if (!binId) {
-      res.status(404).json({ success: false, message: "binId is required" });
-      return;
-    }
-
-    const deleted = await BinModel.findOneAndDelete({ binId });
-
-    if (!deleted) {
-      res.status(404).json({ success: false, message: "Bin not found" });
-      return;
-    }
-
-    res
-      .status(200)
-      .json({ success: true, message: "Bin deleted successfully" });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to delete bin", error });
-  }
-};
+export default router;
