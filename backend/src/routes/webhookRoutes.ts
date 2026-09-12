@@ -28,3 +28,99 @@ export const createBin = async (req: Request, res: Response): Promise<void> => {
     });
   }
 };
+
+// catch bin
+export const captureWebhook = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { bindId } = req.params;
+    const bin = await BinModel.findOne({ bindId });
+    if (!bin) {
+      res.status(404).json({
+        success: false,
+        message: "Bin not found",
+      });
+    }
+
+    const capturedReq: ICapturedRequest = {
+      requestId: uuidv4(),
+      method: req.method as HttpMethod,
+      headers: req.headers,
+      body: req.body || {},
+      queryParams: req.query || {},
+      ip: req.ip || req.socket.remoteAddress || "Unknown",
+      timestamp: new Date(),
+    };
+
+    bin?.requests.unshift(capturedReq);
+    await bin?.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Webhook captured successfully",
+      requestId: capturedReq.requestId,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to capture webhook", error });
+  }
+};
+
+//get all requests for each Bind
+export const getBinRequests = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { bindId } = req.params;
+    const bin = await BinModel.findOne({ bindId });
+
+    if (!bin) {
+      res.status(404).json({ success: false, message: "Bin not found" });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        binId: bin.binId,
+        totalRequests: bin.requests.length,
+        requests: bin.requests,
+      },
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to capture webhook", error });
+  }
+};
+
+//delete bin
+export const deleteBin = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { binId } = req.params;
+
+    if (!binId) {
+      res.status(404).json({ success: false, message: "binId is required" });
+      return;
+    }
+
+    const deleted = await BinModel.findOneAndDelete({ binId });
+
+    if (!deleted) {
+      res.status(404).json({ success: false, message: "Bin not found" });
+      return;
+    }
+
+    res
+      .status(200)
+      .json({ success: true, message: "Bin deleted successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to delete bin", error });
+  }
+};
