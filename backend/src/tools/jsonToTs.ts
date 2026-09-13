@@ -12,7 +12,7 @@ const getPrimitiveType = (value: unknown): string => {
  * Converts JSON data into a TS interface.
  *
  * @param jsonInput - The JSON data to convert
- * @param rootName - The name of the root element
+ * @param rootName - The name of the Interface (default RootPayload)
  */
 
 export const generateTypeScriptInterfaces = (

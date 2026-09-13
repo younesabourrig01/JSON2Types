@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { BinModel } from "../models/bin.js";
 import { HttpMethod, ICapturedRequest } from "../types/webhook.js";
+import { generateTypeScriptInterfaces } from "../tools/jsonToTs.js";
 
 //create unique Bin
 export const createBin = async (req: Request, res: Response): Promise<void> => {
@@ -122,5 +123,49 @@ export const deleteBin = async (req: Request, res: Response): Promise<void> => {
     res
       .status(500)
       .json({ success: false, message: "Failed to delete bin", error });
+  }
+};
+
+//generate TypeScript Interface
+export const getRequestType = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { binId, requestId } = req.params;
+    if (!binId || !requestId) {
+      res.status(404).json({
+        sucsess: false,
+        message: "binId / requestId required",
+      });
+      return;
+    }
+
+    const bin = await BinModel.findOne({ binId });
+
+    if (!bin) {
+      res.status(404).json({ success: false, message: "Bin not found" });
+      return;
+    }
+
+    const requestItem = bin.requests.find((r) => r.requestId === requestId);
+    if (!requestItem) {
+      res.status(404).json({ success: false, message: "Request not found" });
+      return;
+    }
+
+    const tsTypes = generateTypeScriptInterfaces(requestItem.body, "Payload");
+
+    res.status(200).json({
+      success: true,
+      data: {
+        requestId: requestItem.requestId,
+        typescriptTypes: tsTypes,
+      },
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to generate TS types", error });
   }
 };
