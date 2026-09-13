@@ -1,0 +1,124 @@
+# JSON2Types
+
+JSON2Types is a small developer tool for capturing JSON payloads from external
+services and turning them into TypeScript interfaces.
+
+It is useful when you receive objects from another platform, for example PayPal
+webhooks or other third-party APIs, and want to quickly inspect the payload and
+generate a matching TypeScript type.
+
+## What It Does
+
+- Creates a temporary webhook bin.
+- Captures incoming HTTP requests sent to that bin.
+- Stores request headers, body, query params, IP, and timestamp in MongoDB.
+- Generates TypeScript interfaces from a captured JSON request body.
+- Includes a React/Vite frontend starter for building the UI.
+
+## Tech Stack
+
+- Backend: Node.js, Express, TypeScript, MongoDB, Mongoose
+- Frontend: React, TypeScript, Vite
+
+## Project Structure
+
+```txt
+backend/
+  src/
+    controllers/     API request handlers
+    routes/          Express routes
+    models/          MongoDB models
+    tools/           JSON to TypeScript converter
+    types/           Shared TypeScript types
+frontend/
+  src/               React app
+```
+
+## Setup
+
+Install backend dependencies:
+
+```bash
+cd backend
+npm install
+```
+
+Create a `.env` file in `backend/`:
+
+```env
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/JSON2Types
+```
+
+Run the backend:
+
+```bash
+npm run dev
+```
+
+Install and run the frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## API Endpoints
+
+### Create a Bin
+
+```http
+POST /api/bins
+```
+
+Returns a `binId` and endpoint URL.
+
+### Capture a Webhook Request
+
+```http
+POST /api/bins/:binId/collect
+```
+
+Send any JSON payload to this endpoint. Other HTTP methods are also accepted.
+
+Example:
+
+```bash
+curl -X POST http://localhost:5000/api/bins/YOUR_BIN_ID/collect \
+  -H "Content-Type: application/json" \
+  -d '{"id":"evt_123","amount":49.99,"customer":{"email":"test@example.com"}}'
+```
+
+### Get Captured Requests
+
+```http
+GET /api/bins/:binId
+```
+
+### Generate TypeScript Types
+
+```http
+GET /api/bins/:binId/requests/:requestId/types
+```
+
+Example output:
+
+```ts
+export interface Customer {
+  email: string;
+}
+
+export interface Payload {
+  id: string;
+  amount: number;
+  customer: Customer;
+}
+```
+
+### Delete a Bin
+
+```http
+DELETE /api/bins/:binId
+```
+
