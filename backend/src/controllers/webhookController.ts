@@ -127,7 +127,7 @@ export const deleteBin = async (req: Request, res: Response): Promise<void> => {
 };
 
 //generate TypeScript Interface
-export const getRequestType = async (
+export const getRequestTypes = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
