@@ -28,11 +28,11 @@ const startServer = async (): Promise<void> => {
     await connectDB();
 
     app.listen(PORT, () => {
-      console.log(`🚀 [Server]: Server is running on http://localhost:${PORT}`);
-      console.log(`🏥 [Health Check]: http://localhost:${PORT}/health`);
+      console.log(`[Server]: Server is running on http://localhost:${PORT}`);
+      console.log(`[Health Check]: http://localhost:${PORT}/health`);
     });
   } catch (error) {
-    console.error("❌ [Server]: Failed to start server:", error);
+    console.error("[Server]: Failed to start server:", error);
     process.exit(1);
   }
 };
