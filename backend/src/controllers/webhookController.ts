@@ -17,7 +17,7 @@ export const createBin = async (req: Request, res: Response): Promise<void> => {
       message: "Bin created successfuly",
       data: {
         binId: newBin.binId,
-        endpointUrl: `${req.protocol}://${req.get("host")}/api/bins/${newBin.binId}`,
+        endpointUrl: `${req.protocol}://${req.get("host")}/api/bins/${newBin.binId}/collect`,
         createdAt: newBin.createdAt,
       },
     });
@@ -36,13 +36,14 @@ export const captureWebhook = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { bindId } = req.params;
-    const bin = await BinModel.findOne({ bindId });
+    const { binId } = req.params;
+    const bin = await BinModel.findOne().where("binId").equals(binId);
     if (!bin) {
       res.status(404).json({
         success: false,
         message: "Bin not found",
       });
+      return;
     }
 
     const capturedReq: ICapturedRequest = {
@@ -76,8 +77,8 @@ export const getBinRequests = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { bindId } = req.params;
-    const bin = await BinModel.findOne({ bindId });
+    const { binId } = req.params;
+    const bin = await BinModel.findOne().where("binId").equals(binId);
 
     if (!bin) {
       res.status(404).json({ success: false, message: "Bin not found" });

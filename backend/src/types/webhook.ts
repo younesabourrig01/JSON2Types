@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import { Document, Types } from "mongoose";
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
 export interface ICapturedRequest {
@@ -12,7 +12,7 @@ export interface ICapturedRequest {
   timestamp: Date;
 }
 
-export interface IBin {
+export interface IBin extends Document {
   binId: string;
   requests: ICapturedRequest[];
   createdAt: Date;
