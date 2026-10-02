@@ -27,7 +27,7 @@ export const webhookApi = createApi({
     getBinRequests: builder.query<BinData, string>({
       query: (binId) => `/bins/${binId}`,
       transformResponse: (response: ApiResponse<BinData>) => response.data!,
-      providesTags: (result, error, binId) => [{ type: 'BinRequests', id: binId }],
+      providesTags: (_result, _error, binId) => [{ type: 'BinRequests', id: binId }],
     }),
 
     // 3. Delete a Bin (Mutation)
@@ -37,7 +37,7 @@ export const webhookApi = createApi({
         method: 'DELETE',
       }),
       transformResponse: (response: ApiResponse<null>) => response.success,
-      invalidatesTags: (result, error, binId) => [{ type: 'BinRequests', id: binId }],
+      invalidatesTags: (_result, _error, binId) => [{ type: 'BinRequests', id: binId }],
     }),
 
     // 4. Get TypeScript interfaces for a specific payload (Query)
